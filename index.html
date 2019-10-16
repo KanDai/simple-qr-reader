@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simple Qr Reader</title>
+<link rel="stylesheet" href="./app.css">
+</head>
+<body>
+
+<div class="reader">
+  <video id="js-video" class="reader-video" autoplay playsinline></video>
+</div>
+
+<div style="display:none">
+  <canvas id="js-canvas"></canvas>
+</div>
+
+<div id="js-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-cnt">
+      <span class="modal-title">読み取り結果</span>
+      <span id="js-result" class="modal-result"></span>
+    </div>
+    <a href="" id="js-link" class="modal-btn" target="_blank">開く</a>
+    <button type="button" id="js-modal-close" class="modal-btn">閉じる</button>
+  </div>
+</div>
+
+<script src="./jsQR.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
