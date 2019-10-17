@@ -75,3 +75,25 @@ html, body {
     font-size: 18px;
     text-decoration: none;
 }
+
+.unsupported {
+    display: none;
+    flex-direction: column;
+    position: fixed;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100%;
+    color: #fff;
+}
+
+.unsupported.is-show {
+    display: flex;
+}
+
+.unsupported-title {
+    font-weight: bold;
+    font-size: 2em;
+}

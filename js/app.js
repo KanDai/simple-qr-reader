@@ -1,6 +1,5 @@
 if (!navigator.mediaDevices) {
-    console.log('getUserMedia() not supported.')
-    alert('端末が対応していません')
+    document.querySelector('#js-unsupported').classList.add('is-show')
 }
 
 const video  = document.querySelector('#js-video')
@@ -55,5 +54,5 @@ navigator.mediaDevices
         }
     })
     .catch(function(err) {
-        alert('エラーが発生しました。')
+        alert('Error!!')
     })
