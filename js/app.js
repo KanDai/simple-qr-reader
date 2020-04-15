@@ -2,27 +2,29 @@ if (!navigator.mediaDevices) {
     document.querySelector('#js-unsupported').classList.add('is-show')
 }
 
+if (window.BarcodeDetector == undefined) {
+    console.log('Barcode Detection supported');
+    document.querySelector('#js-unsupported').classList.add('is-show')
+}
+
 const video  = document.querySelector('#js-video')
-const canvas = document.querySelector('#js-canvas')
-const ctx    = canvas.getContext('2d')
 
 const checkImage = () => {
-    // 取得している動画をCanvasに描画
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-    // Canvasからデータを取得
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-
-    // jsQRに渡す
-    const code = jsQR(imageData.data, canvas.width, canvas.height)
-
-    // QRコードの読み取りに成功したらモーダル開く
-    // 失敗したら再度実行
-    if (code) {
-        openModal(code.data)
-    } else {
-        setTimeout(() => { checkImage() }, 200)
-    }
+    const barcodeDetector = new BarcodeDetector()
+    barcodeDetector.detect(video)
+        .then(barcodes => {
+            if ( barcodes.length > 0 ) {
+                // QRコードの読み取りに成功したらモーダル開く
+                for (let barcode of barcodes){
+                    openModal(barcode.rawValue)
+                }
+            } else {
+                // QRコードが見つからなかったら再度実行
+                setTimeout(() => { checkImage() }, 200)
+            }
+        }).catch((e) => {
+            console.error("Barcode Detection failed, boo.");
+        })
 }
 
 const openModal = function(url) {
