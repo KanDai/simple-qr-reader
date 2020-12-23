@@ -3,7 +3,7 @@ if (!navigator.mediaDevices) {
 }
 
 if (window.BarcodeDetector == undefined) {
-    console.log('Barcode Detection supported');
+    console.log('Barcode Detector is not supported by this browser.')
     document.querySelector('#js-unsupported').classList.add('is-show')
 }
 
@@ -24,7 +24,7 @@ const checkImage = () => {
                 setTimeout(() => { checkImage() }, 200)
             }
         }).catch((e) => {
-            console.error("Barcode Detection failed, boo.");
+            console.error("Barcode Detection failed, boo.")
         })
 }
 
