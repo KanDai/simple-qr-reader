@@ -16,6 +16,7 @@ const checkImage = () => {
             if ( barcodes.length > 0 ) {
                 // QRコードの読み取りに成功したらモーダル開く
                 for (let barcode of barcodes){
+                    console.log(barcode)
                     openModal(barcode.rawValue)
                 }
             } else {
@@ -26,18 +27,6 @@ const checkImage = () => {
             console.error("Barcode Detection failed, boo.");
         })
 }
-
-const openModal = function(url) {
-    document.querySelector('#js-result').innerText = url
-    document.querySelector('#js-link').setAttribute('href', url)
-    document.querySelector('#js-modal').classList.add('is-show')
-}
-
-document.querySelector('#js-modal-close')
-    .addEventListener('click', () => {
-        document.querySelector('#js-modal').classList.remove('is-show')
-        checkImage()
-    })
 
 navigator.mediaDevices
     .getUserMedia({
@@ -57,4 +46,16 @@ navigator.mediaDevices
     })
     .catch(function(err) {
         alert('Error!!')
+    })
+
+const openModal = function(url) {
+    document.querySelector('#js-result').innerText = url
+    document.querySelector('#js-link').setAttribute('href', url)
+    document.querySelector('#js-modal').classList.add('is-show')
+}
+
+document.querySelector('#js-modal-close')
+    .addEventListener('click', () => {
+        document.querySelector('#js-modal').classList.remove('is-show')
+        checkImage()
     })
