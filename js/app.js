@@ -8,30 +8,56 @@ SQR.reader = (() => {
 
     const video = document.querySelector('#js-video')
 
-    const checkQR = () => {
-        if (window.BarcodeDetector) {
-            // @TODO BarcodeDetectorが使えるかどうかで処理を分岐させる
-        }
+    /**
+     * videoの出力をCanvasに描画して画像化 jsQRを使用してQR解析
+     */
+    const checkQRUseLibrary = () => {
+        const canvas = document.querySelector('#js-canvas')
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        const code = jsQR(imageData.data, canvas.width, canvas.height)
 
+        if (code) {
+            SQR.modal.open(code.data)
+        } else {
+            setTimeout(checkQRUseLibrary, 200)
+        }
+    }
+
+    /**
+     * videoの出力をBarcodeDetectorを使用してQR解析
+     */
+    const checkQRUseBarcodeDetector = () => {
         const barcodeDetector = new BarcodeDetector()
         barcodeDetector
             .detect(video)
             .then((barcodes) => {
                 if (barcodes.length > 0) {
-                    // QRコードの読み取りに成功したらモーダル開く
                     for (let barcode of barcodes) {
                         SQR.modal.open(barcode.rawValue)
                     }
                 } else {
-                    // QRコードが見つからなかったら再度実行
-                    setTimeout(checkQR, 200)
+                    setTimeout(checkQRUseBarcodeDetector, 200)
                 }
             })
-            .catch((e) => {
+            .catch(() => {
                 console.error('Barcode Detection failed, boo.')
             })
     }
 
+    /**
+     * BarcodeDetector APIを使えるかどうかで処理を分岐
+     */
+    const findQR = () => {
+        window.BarcodeDetector
+            ? checkQRUseBarcodeDetector()
+            : checkQRUseLibrary()
+    }
+
+    /**
+     * デバイスのカメラを起動
+     */
     const initCamera = () => {
         navigator.mediaDevices
             .getUserMedia({
@@ -46,40 +72,46 @@ SQR.reader = (() => {
                 video.srcObject = stream
                 video.onloadedmetadata = () => {
                     video.play()
-                    checkQR()
+                    findQR()
                 }
             })
-            .catch((err) => {
-                alert('Error!!')
+            .catch(() => {
+                document
+                    .querySelector('#js-unsupported')
+                    .classList.add('is-show')
             })
     }
 
     return {
         initCamera,
-        checkQR,
+        findQR,
     }
 })()
 
 SQR.modal = (() => {
     const result = document.querySelector('#js-result')
-    const link = document.querySelector('#js-result')
-    const modal = document.querySelector('#js-result')
+    const link = document.querySelector('#js-link')
+    const modal = document.querySelector('#js-modal')
     const modalClose = document.querySelector('#js-modal-close')
 
+    /**
+     * 取得した文字列を入れ込んでモーダルを開く
+     */
     const open = (url) => {
         result.innerText = url
         link.setAttribute('href', url)
         modal.classList.add('is-show')
     }
 
+    /**
+     * モーダルを閉じてQR読み込みを再開
+     */
     const close = () => {
         modal.classList.remove('is-show')
-        SQR.reader.checkQR()
+        SQR.reader.findQR()
     }
 
-    modalClose.addEventListener('click', () => {
-        close()
-    })
+    modalClose.addEventListener('click', () => close())
 
     return {
         open,
