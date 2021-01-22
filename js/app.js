@@ -1,58 +1,121 @@
-if (!navigator.mediaDevices) {
-    document.querySelector('#js-unsupported').classList.add('is-show')
-}
+window.SQR = window.SQR || {}
 
-const video  = document.querySelector('#js-video')
-const canvas = document.querySelector('#js-canvas')
-const ctx    = canvas.getContext('2d')
-
-const checkImage = () => {
-    // 取得している動画をCanvasに描画
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-    // Canvasからデータを取得
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-
-    // jsQRに渡す
-    const code = jsQR(imageData.data, canvas.width, canvas.height)
-
-    // QRコードの読み取りに成功したらモーダル開く
-    // 失敗したら再度実行
-    if (code) {
-        openModal(code.data)
-    } else {
-        setTimeout(() => { checkImage() }, 200)
+SQR.reader = (() => {
+    if (!navigator.mediaDevices) {
+        document.querySelector('#js-unsupported').classList.add('is-show')
+        return
     }
-}
 
-const openModal = function(url) {
-    document.querySelector('#js-result').innerText = url
-    document.querySelector('#js-link').setAttribute('href', url)
-    document.querySelector('#js-modal').classList.add('is-show')
-}
+    const video = document.querySelector('#js-video')
 
-document.querySelector('#js-modal-close')
-    .addEventListener('click', () => {
-        document.querySelector('#js-modal').classList.remove('is-show')
-        checkImage()
-    })
+    /**
+     * videoの出力をCanvasに描画して画像化 jsQRを使用してQR解析
+     */
+    const checkQRUseLibrary = () => {
+        const canvas = document.querySelector('#js-canvas')
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        const code = jsQR(imageData.data, canvas.width, canvas.height)
 
-navigator.mediaDevices
-    .getUserMedia({
-        audio: false,
-        video: {
-            facingMode: {
-                exact: 'environment'
-            }
+        if (code) {
+            SQR.modal.open(code.data)
+        } else {
+            setTimeout(checkQRUseLibrary, 200)
         }
-    })
-    .then(function(stream) {
-        video.srcObject = stream
-        video.onloadedmetadata = function(e) {
-            video.play()
-            checkImage()
-        }
-    })
-    .catch(function(err) {
-        alert('Error!!')
-    })
+    }
+
+    /**
+     * videoの出力をBarcodeDetectorを使用してQR解析
+     */
+    const checkQRUseBarcodeDetector = () => {
+        const barcodeDetector = new BarcodeDetector()
+        barcodeDetector
+            .detect(video)
+            .then((barcodes) => {
+                if (barcodes.length > 0) {
+                    for (let barcode of barcodes) {
+                        SQR.modal.open(barcode.rawValue)
+                    }
+                } else {
+                    setTimeout(checkQRUseBarcodeDetector, 200)
+                }
+            })
+            .catch(() => {
+                console.error('Barcode Detection failed, boo.')
+            })
+    }
+
+    /**
+     * BarcodeDetector APIを使えるかどうかで処理を分岐
+     */
+    const findQR = () => {
+        window.BarcodeDetector
+            ? checkQRUseBarcodeDetector()
+            : checkQRUseLibrary()
+    }
+
+    /**
+     * デバイスのカメラを起動
+     */
+    const initCamera = () => {
+        navigator.mediaDevices
+            .getUserMedia({
+                audio: false,
+                video: {
+                    facingMode: {
+                        exact: 'environment',
+                    },
+                },
+            })
+            .then((stream) => {
+                video.srcObject = stream
+                video.onloadedmetadata = () => {
+                    video.play()
+                    findQR()
+                }
+            })
+            .catch(() => {
+                document
+                    .querySelector('#js-unsupported')
+                    .classList.add('is-show')
+            })
+    }
+
+    return {
+        initCamera,
+        findQR,
+    }
+})()
+
+SQR.modal = (() => {
+    const result = document.querySelector('#js-result')
+    const link = document.querySelector('#js-link')
+    const modal = document.querySelector('#js-modal')
+    const modalClose = document.querySelector('#js-modal-close')
+
+    /**
+     * 取得した文字列を入れ込んでモーダルを開く
+     */
+    const open = (url) => {
+        result.innerText = url
+        link.setAttribute('href', url)
+        modal.classList.add('is-show')
+    }
+
+    /**
+     * モーダルを閉じてQR読み込みを再開
+     */
+    const close = () => {
+        modal.classList.remove('is-show')
+        SQR.reader.findQR()
+    }
+
+    modalClose.addEventListener('click', () => close())
+
+    return {
+        open,
+    }
+})()
+
+if (SQR.reader) SQR.reader.initCamera()
