@@ -4,7 +4,8 @@
     box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
     margin: 0;
     padding: 0;
     height: 100%;
@@ -33,7 +34,7 @@ html, body {
     left: 0;
     width: 100vw;
     height: 100%;
-    background-color: rgba(0, 0, 0, .7);
+    background-color: rgba(0, 0, 0, 0.7);
 }
 
 .modal-overlay.is-show {
@@ -57,7 +58,12 @@ html, body {
 }
 
 .modal-result {
+    resize: none;
     word-break: break-all;
+    border: none;
+    width: 100%;
+    height: auto;
+    font-size: 16px;
 }
 
 .modal-btn {
