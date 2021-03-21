@@ -1,8 +1,14 @@
 window.SQR = window.SQR || {}
 
 SQR.reader = (() => {
-    if (!navigator.mediaDevices) {
+    /**
+     * getUserMedia()に非対応の場合は非対応の表示をする
+     */
+    const showUnsuportedScreen = () => {
         document.querySelector('#js-unsupported').classList.add('is-show')
+    }
+    if (!navigator.mediaDevices) {
+        showUnsuportedScreen()
         return
     }
 
@@ -76,9 +82,7 @@ SQR.reader = (() => {
                 }
             })
             .catch(() => {
-                document
-                    .querySelector('#js-unsupported')
-                    .classList.add('is-show')
+                showUnsuportedScreen()
             })
     }
 
